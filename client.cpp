@@ -14,6 +14,10 @@
 
 #include <arpa/inet.h>
 
+#include <iostream>
+#include <fstream>
+using namespace std;
+
 #define PORT "3490" // the port client will be connecting to 
 
 #define MAXDATASIZE 100 // max number of bytes we can get at once 
@@ -44,6 +48,29 @@ int main(int argc, char *argv[])
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
+
+	string filename = "output";
+
+	char protocol[100];
+	char ip[100];
+	char auth[100];
+    int port = 80;
+    char page[100];
+	/* Get the parts of the input url */
+	sscanf(argv[1], "%99[^:]://%99[^/]/%99[^\n]", protocol, auth, page);
+	sscanf(auth, "%99[^:]:%99d[^\n]", ip, &port);
+	cout << auth << "\nprotocol: " << protocol << "\nip: " << ip << "\nport: " << port << "\npage: " << page << "\n";
+
+	/* Test if http protocol */
+	int is_prot_http = strcmp("http", protocol);
+	if(is_prot_http > 0) {
+		ofstream myfile;
+		myfile.open("output");
+		myfile << "INVALIDPROTOCOL";
+		myfile.close();
+		return 1;
+	}
+	return 0;
 
 	if ((rv = getaddrinfo(argv[1], PORT, &hints, &servinfo)) != 0) {
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
