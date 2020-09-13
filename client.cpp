@@ -49,16 +49,14 @@ int main(int argc, char *argv[])
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 
-	string filename = "output";
-
 	char protocol[100];
 	char ip[100];
 	char auth[100];
-    int port = 80;
+    char port[10] = "80";
     char page[100];
 	/* Get the parts of the input url */
 	sscanf(argv[1], "%99[^:]://%99[^/]/%99[^\n]", protocol, auth, page);
-	sscanf(auth, "%99[^:]:%99d[^\n]", ip, &port);
+	sscanf(auth, "%99[^:]:%99[^\n]", ip, port);
 	cout << auth << "\nprotocol: " << protocol << "\nip: " << ip << "\nport: " << port << "\npage: " << page << "\n";
 
 	/* Test if http protocol */
@@ -70,12 +68,12 @@ int main(int argc, char *argv[])
 		myfile.close();
 		return 1;
 	}
-	return 0;
 
-	if ((rv = getaddrinfo(argv[1], PORT, &hints, &servinfo)) != 0) {
+	if ((rv = getaddrinfo(ip, port, &hints, &servinfo)) != 0) {
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
 		return 1;
 	}
+	cout << "rv = " << rv << "\n";
 
 	// loop through all the results and connect to the first we can
 	for(p = servinfo; p != NULL; p = p->ai_next) {
@@ -95,7 +93,10 @@ int main(int argc, char *argv[])
 	}
 
 	if (p == NULL) {
-		fprintf(stderr, "client: failed to connect\n");
+		ofstream myfile;
+		myfile.open("output");
+		myfile << "NOCONNECTION";
+		myfile.close();
 		return 2;
 	}
 
