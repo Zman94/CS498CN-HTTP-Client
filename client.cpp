@@ -16,11 +16,31 @@
 
 #include <iostream>
 #include <fstream>
+#include <vector>
 using namespace std;
 
 #define PORT "3490" // the port client will be connecting to 
 
 #define MAXDATASIZE 100 // max number of bytes we can get at once 
+
+size_t split(const string &txt, vector<string> &strs, char ch)
+{
+    size_t pos = txt.find( ch );
+    size_t initialPos = 0;
+    strs.clear();
+
+    // Decompose statement
+    while( pos != std::string::npos ) {
+        strs.push_back( txt.substr( initialPos, pos - initialPos ) );
+        initialPos = pos + 1;
+        pos = txt.find( ch, initialPos );
+    }
+
+    // Add the last one
+    strs.push_back( txt.substr( initialPos, std::min( pos, txt.size() ) - initialPos + 1 ) );
+
+    return strs.size();
+}
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -54,7 +74,7 @@ int main(int argc, char *argv[])
 	char auth[100];
     char port[10] = "80";
     char page[100];
-	unsigned char buffer[4096];
+	char buffer[4096];
 	/* Get the parts of the input url */
 	sscanf(argv[1], "%99[^:]://%99[^/]/%99[^\n]", protocol, auth, page);
 	sscanf(auth, "%99[^:]:%99[^\n]", ip, port);
@@ -99,16 +119,27 @@ int main(int argc, char *argv[])
 		myfile.close();
 		return 2;
 	}
+	// string get_request = "GET " + string(page) + " HTTP/1.0\r\n\r\n";
+	string get_request = "GET / HTTP/1.0\r\n\r\n";
+	const char* get_request_type = get_request.c_str();
+	cout << "request: " << get_request_type;
 
-	send(sockfd, "HEAD / HTTP/1.0\r\n\r\n", 23, 0);
+	cout << "SEND\n";
+	int sent_bytes = send(sockfd, get_request_type, strlen(get_request_type), 0);
+	cout << sent_bytes << "\n";
 	int recv_length = 1;
-	recv_length = recv(sockfd, &buffer, 1024, 0);
+	cout << "RECV\n";
+	recv_length = recv(sockfd, buffer, 512, 0);
 	cout << recv_length << "\n";
-	cout << "buffer: " << buffer << "\n\n";
-	char tmp[100];
-	int response_code;
-	sscanf(buffer+8, "%d", response_code);
-	cout << response_code << "\n";
+	string buffer_str = string(buffer);
+	vector<string> response;
+
+	cout << "SPLIT\n";
+	split(buffer_str, response, ' ');
+	int response_code = stoi(response[1]);
+	cout << "reponse code: " << response_code << "\n";
+	cout << "buffer:\n" << buffer_str << "\n";
+	return 0;
 	while(recv_length > 0){
 		printf("The web server is %s\n", buffer+8);
 		freeaddrinfo(servinfo);
