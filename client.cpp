@@ -17,6 +17,8 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <map>
+#include <sstream>
 using namespace std;
 
 #define PORT "3490" // the port client will be connecting to 
@@ -74,7 +76,6 @@ int main(int argc, char *argv[])
 	char auth[100];
     char port[10] = "80";
     char page[100];
-	char buffer[4096];
 	/* Get the parts of the input url */
 	sscanf(argv[1], "%99[^:]://%99[^/]/%99[^\n]", protocol, auth, page);
 	sscanf(auth, "%99[^:]:%99[^\n]", ip, port);
@@ -91,7 +92,10 @@ int main(int argc, char *argv[])
 	}
 
 	if ((rv = getaddrinfo(ip, port, &hints, &servinfo)) != 0) {
-		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+		ofstream myfile;
+		myfile.open("output");
+		myfile << "NOCONNECTION";
+		myfile.close();
 		return 1;
 	}
 
@@ -99,13 +103,11 @@ int main(int argc, char *argv[])
 	for(p = servinfo; p != NULL; p = p->ai_next) {
 		if ((sockfd = socket(p->ai_family, p->ai_socktype,
 				p->ai_protocol)) == -1) {
-			perror("client: socket");
 			continue;
 		}
 
 		if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
 			close(sockfd);
-			perror("client: connect");
 			continue;
 		}
 
@@ -119,34 +121,42 @@ int main(int argc, char *argv[])
 		myfile.close();
 		return 2;
 	}
-	string get_request = "GET /" + string(page) + " HTTP/1.0\r\n\r\n";
+	string get_request = "GET " + string(page) + " HTTP/1.0\r\n\r\n";
 	const char* get_request_type = get_request.c_str();
 	cout << "request: " << get_request_type;
 
-	cout << "SEND\n";
 	int sent_bytes = send(sockfd, get_request_type, strlen(get_request_type), 0);
-	cout << sent_bytes << "\n";
 	int recv_length = 1;
-	cout << "RECV\n";
-	recv_length = recv(sockfd, buffer, 512, 0);
-	cout << recv_length << "\n";
+	char buffer[4096];
+	recv_length = recv(sockfd, buffer, 4096, 0);
+	cout << buffer << "\n\n";
+
 	string buffer_str = string(buffer);
 	vector<string> response;
 
 	split(buffer_str, response, ' ');
 	int response_code;
 	sscanf(response[1].c_str(), "%d", &response_code);
-	cout << "reponse code: " << response_code << "\n";
-	cout << "buffer:\n" << buffer_str << "\n";
-	return 0;
-	while(recv_length > 0){
-		printf("The web server is %s\n", buffer+8);
-		freeaddrinfo(servinfo);
-		return 0;
-	} 
+
+
+	istringstream resp(buffer);
+	string header;
+	string::size_type index;
+	while (getline(resp, header)) {
+
+		index = header.find(':', 0);
+		if(index != std::string::npos) {
+			if(response_code == 301 && header.compare("Location")){
+				cout << "SERVER MOVED. New location.\n";
+			}
+			std::cout << header.substr(0, index) << "\n" <<header.substr(index + 1) << "\n";
+		}
+	}
 
 	freeaddrinfo(servinfo); // all done with this structure
 	close(sockfd);
 
 	return 0;
 }
+
+// New location Location: https://illinois.edu/

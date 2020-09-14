@@ -23,5 +23,8 @@ all: client server listener talker
 client: client.cpp
 	@${CC} ${CC_ARGS} -std=c++98 -pedantic -g -o http_client client.cpp
 	
+test: test.cpp
+	@${CC} ${CC_ARGS} -std=c++98 -pedantic -g -o test test.cpp
+
 clean:
 	@rm -f talker server http_client client listener *.o
