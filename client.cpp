@@ -54,10 +54,11 @@ int main(int argc, char *argv[])
 	char auth[100];
     char port[10] = "80";
     char page[100];
+	unsigned char buffer[4096];
 	/* Get the parts of the input url */
 	sscanf(argv[1], "%99[^:]://%99[^/]/%99[^\n]", protocol, auth, page);
 	sscanf(auth, "%99[^:]:%99[^\n]", ip, port);
-	cout << auth << "\nprotocol: " << protocol << "\nip: " << ip << "\nport: " << port << "\npage: " << page << "\n";
+	cout << auth << "\nprotocol: " << protocol << "\nip: " << ip << "\nport: " << port << "\npage: " << page << "\n\n";
 
 	/* Test if http protocol */
 	int is_prot_http = strcmp("http", protocol);
@@ -73,7 +74,6 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
 		return 1;
 	}
-	cout << "rv = " << rv << "\n";
 
 	// loop through all the results and connect to the first we can
 	for(p = servinfo; p != NULL; p = p->ai_next) {
@@ -100,23 +100,23 @@ int main(int argc, char *argv[])
 		return 2;
 	}
 
-	inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
-			s, sizeof s);
-	printf("client: connecting to %s\n", s);
+	send(sockfd, "HEAD / HTTP/1.0\r\n\r\n", 23, 0);
+	int recv_length = 1;
+	recv_length = recv(sockfd, &buffer, 1024, 0);
+	cout << recv_length << "\n";
+	cout << "buffer: " << buffer << "\n\n";
+	char tmp[100];
+	int response_code;
+	sscanf(buffer+8, "%d", response_code);
+	cout << response_code << "\n";
+	while(recv_length > 0){
+		printf("The web server is %s\n", buffer+8);
+		freeaddrinfo(servinfo);
+		return 0;
+	} 
 
 	freeaddrinfo(servinfo); // all done with this structure
-
-	if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
-	    perror("recv");
-	    exit(1);
-	}
-
-	buf[numbytes] = '\0';
-
-	printf("client: received '%s'\n",buf);
-
 	close(sockfd);
 
 	return 0;
 }
-
