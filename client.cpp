@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 	/* Get the parts of the input url */
 	sscanf(argv[1], "%99[^:]://%99[^/]/%99[^\n]", protocol, auth, page);
 	sscanf(auth, "%99[^:]:%99[^\n]", ip, port);
-	cout << auth << "\nprotocol: " << protocol << "\nip: " << ip << "\nport: " << port << "\npage: " << page << "\n\n";
+	// cout << auth << "\nprotocol: " << protocol << "\nip: " << ip << "\nport: " << port << "\npage: " << page << "\n\n";
 
 	/* Test if http protocol */
 	int is_prot_http = strcmp("http", protocol);
@@ -119,8 +119,7 @@ int main(int argc, char *argv[])
 		myfile.close();
 		return 2;
 	}
-	// string get_request = "GET " + string(page) + " HTTP/1.0\r\n\r\n";
-	string get_request = "GET / HTTP/1.0\r\n\r\n";
+	string get_request = "GET /" + string(page) + " HTTP/1.0\r\n\r\n";
 	const char* get_request_type = get_request.c_str();
 	cout << "request: " << get_request_type;
 
