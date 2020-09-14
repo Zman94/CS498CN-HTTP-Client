@@ -134,9 +134,9 @@ int main(int argc, char *argv[])
 	string buffer_str = string(buffer);
 	vector<string> response;
 
-	cout << "SPLIT\n";
 	split(buffer_str, response, ' ');
-	int response_code = stoi(response[1]);
+	int response_code;
+	sscanf(response[1].c_str(), "%d", &response_code);
 	cout << "reponse code: " << response_code << "\n";
 	cout << "buffer:\n" << buffer_str << "\n";
 	return 0;
