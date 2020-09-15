@@ -128,31 +128,58 @@ int main(int argc, char *argv[])
 	int sent_bytes = send(sockfd, get_request_type, strlen(get_request_type), 0);
 	int recv_length = 1;
 	char buffer[4096];
-	recv_length = recv(sockfd, buffer, 4096, 0);
-	cout << buffer << "\n\n";
+	bool parseHeader = true;
+	while(recv_length > 0){
+		recv_length = recv(sockfd, buffer, 4096, 0);
+		if(recv_length == 0){
+			cout << "End of receive\n";
+			break;
+		}
+		cout << buffer << "\n\n";
 
-	string buffer_str = string(buffer);
-	vector<string> response;
+		if(parseHeader){
+			parseHeader = false;
+			string buffer_str = string(buffer);
+			vector<string> response;
 
-	split(buffer_str, response, ' ');
-	int response_code;
-	sscanf(response[1].c_str(), "%d", &response_code);
-
-
-	istringstream resp(buffer);
-	string header;
-	string::size_type index;
-	while (getline(resp, header)) {
-
-		index = header.find(':', 0);
-		if(index != std::string::npos) {
-			if(response_code == 301 && header.compare("Location")){
-				cout << "SERVER MOVED. New location.\n";
+			split(buffer_str, response, ' ');
+			int response_code;
+			sscanf(response[1].c_str(), "%d", &response_code);
+			if(response_code == 404){
+				ofstream myfile;
+				myfile.open("output");
+				myfile << "FILENOTFOUND";
+				myfile.close();
+				return 2;
 			}
-			std::cout << header.substr(0, index) << "\n" <<header.substr(index + 1) << "\n";
+
+			istringstream resp(buffer);
+			string header;
+			string::size_type index;
+			while (getline(resp, header) && header != "\r") {
+
+				index = header.find(':', 0);
+				if(index != std::string::npos) {
+					if(response_code == 301 && header.compare("Location")){
+						cout << "SERVER MOVED. New location.\n";
+					}
+					std::cout << header.substr(0, index) << "\n" <<header.substr(index + 1) << "\n";
+				}
+			}
+			myfile.open("output");
+			while (getline(resp, header) && header != "\r") {
+				myfile << header;
+			}
+			myfile.close();
+		}
+		else{
+			myfile.open("output");
+			while (getline(resp, header) && header != "\r") {
+				myfile << header;
+			}
+			myfile.close();
 		}
 	}
-
 	freeaddrinfo(servinfo); // all done with this structure
 	close(sockfd);
 
