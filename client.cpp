@@ -61,6 +61,7 @@ int main(int argc, char *argv[])
 	struct addrinfo hints, *servinfo, *p;
 	int rv;
 	char s[INET6_ADDRSTRLEN];
+	ofstream myfile;
 
 	if (argc != 2) {
 	    fprintf(stderr,"usage: client hostname\n");
@@ -84,7 +85,6 @@ int main(int argc, char *argv[])
 	/* Test if http protocol */
 	int is_prot_http = strcmp("http", protocol);
 	if(is_prot_http > 0) {
-		ofstream myfile;
 		myfile.open("output");
 		myfile << "INVALIDPROTOCOL";
 		myfile.close();
@@ -92,7 +92,6 @@ int main(int argc, char *argv[])
 	}
 
 	if ((rv = getaddrinfo(ip, port, &hints, &servinfo)) != 0) {
-		ofstream myfile;
 		myfile.open("output");
 		myfile << "NOCONNECTION";
 		myfile.close();
@@ -115,7 +114,6 @@ int main(int argc, char *argv[])
 	}
 
 	if (p == NULL) {
-		ofstream myfile;
 		myfile.open("output");
 		myfile << "NOCONNECTION";
 		myfile.close();
@@ -146,7 +144,6 @@ int main(int argc, char *argv[])
 			int response_code;
 			sscanf(response[1].c_str(), "%d", &response_code);
 			if(response_code == 404){
-				ofstream myfile;
 				myfile.open("output");
 				myfile << "FILENOTFOUND";
 				myfile.close();
@@ -173,6 +170,9 @@ int main(int argc, char *argv[])
 			myfile.close();
 		}
 		else{
+			istringstream resp(buffer);
+			string header;
+			string::size_type index;
 			myfile.open("output");
 			while (getline(resp, header) && header != "\r") {
 				myfile << header;
