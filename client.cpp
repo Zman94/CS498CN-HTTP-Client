@@ -158,9 +158,9 @@ int main(int argc, char *argv[])
                 }
             }
             myfile.open("output");
-            while (getline(resp, header) && header != "\r") {
-                char* write_out = strcpy(new char[header.length() + 1], header.c_str());
-                myfile.write(write_out, header.length() + 1);
+            while (getline(resp, header)) {
+                char* write_out = strcpy(new char[header.length()], header.c_str());
+                myfile.write(write_out, header.length());
                 delete[] write_out;
             }
             myfile.close();
@@ -170,9 +170,9 @@ int main(int argc, char *argv[])
             string header;
             string::size_type index;
             myfile.open("output");
-            while (getline(resp, header) && header != "\r") {
-                char* write_out = strcpy(new char[header.length() + 1], header.c_str());
-                myfile.write(write_out, header.length() + 1);
+            while (getline(resp, header)) {
+                char* write_out = strcpy(new char[header.length()], header.c_str());
+                myfile.write(write_out, header.length());
                 delete[] write_out;
             }
             myfile.close();
