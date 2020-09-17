@@ -123,16 +123,17 @@ int main(int argc, char *argv[])
 
     int sent_bytes = send(sockfd, get_request_type, strlen(get_request_type), 0);
     int recv_length = 1;
+    int length = 0;
     char buffer[4096];
     bool parseHeader = true;
     myfile.open("output");
     while(recv_length > 0){
         recv_length = recv(sockfd, buffer, 4096, 0);
-	cout << "recv_length: " << recv_length << "\n";
         if(recv_length == 0){
             break;
         }
 
+	int firstLine = true;
         if(parseHeader){
             parseHeader = false;
             string buffer_str = string(buffer);
@@ -141,34 +142,39 @@ int main(int argc, char *argv[])
             split(buffer_str, response, ' ');
             int response_code;
             sscanf(response[1].c_str(), "%d", &response_code);
+
             if(response_code == 404){
                 myfile.write("FILENOTFOUND", 12);
+		myfile.close();
                 return 2;
             }
+	    else if(response_code == 301){
+	    }
 
-            istringstream resp(buffer);
-            string header;
-            string::size_type index;
-            while (getline(resp, header) && header != "\r") {
-
-                index = header.find(':', 0);
-                if(index != std::string::npos) {
-                    if(response_code == 301 && header.compare("Location")){
-                    }
-                }
-            }
-            while (getline(resp, header)) {
-                myfile.write(header.c_str(), header.length());
-                myfile.write("\n", 1);
-            }
+	    const char *target = "\r\n\r\n";
+	    char *eoheader = buffer;
+	    eoheader = strstr(buffer, target);
+	    eoheader = eoheader+4; //Remove target
+	    length = string(eoheader).length();
+	    int file_name = string(page).length();
+	    if (strcmp(page, eoheader+length-file_name) == 0){
+		myfile.write(eoheader, length-file_name);
+	    }
+	    else{
+                myfile.write(eoheader, length);
+    	    }
+	    memset(buffer, 0, sizeof(buffer));
         }
         else{
-            istringstream resp(buffer);
-            string header;
-            while (getline(resp, header)) {
-                myfile.write(header.c_str(), header.length());
-                myfile.write("\n", 1);
-            }
+	    length = string(buffer).length();
+	    int file_name = string(page).length();
+	    if (strcmp(page, buffer+length-file_name) == 0){
+		myfile.write(buffer, length-file_name);
+	    }
+	    else{
+                myfile.write(buffer, length);
+    	    }
+	    memset(buffer, 0, sizeof(buffer));
         }
     }
     myfile.close();
@@ -177,5 +183,3 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-
-// New location Location: https://illinois.edu/
