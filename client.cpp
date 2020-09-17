@@ -124,11 +124,11 @@ int main(int argc, char *argv[])
     int sent_bytes = send(sockfd, get_request_type, strlen(get_request_type), 0);
     int recv_length = 1;
     int length = 0;
-    char buffer[4096];
+    char buffer[8192];
     bool parseHeader = true;
     myfile.open("output");
     while(recv_length > 0){
-        recv_length = recv(sockfd, buffer, 4096, 0);
+        recv_length = recv(sockfd, buffer, 8192, 0);
         if(recv_length == 0){
             break;
         }
@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
 	    char *eoheader = buffer;
 	    eoheader = strstr(buffer, target);
 	    eoheader = eoheader+4; //Remove target
-	    length = string(eoheader).length();
+	    length = recv_length-(eoheader-buffer);
 	    int file_name = string(page).length();
 	    if (strcmp(page, eoheader+length-file_name) == 0){
 		myfile.write(eoheader, length-file_name);
@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
 	    memset(buffer, 0, sizeof(buffer));
         }
         else{
-	    length = string(buffer).length();
+	    length = recv_length;
 	    int file_name = string(page).length();
 	    if (strcmp(page, buffer+length-file_name) == 0){
 		myfile.write(buffer, length-file_name);
