@@ -54,3 +54,4 @@ dkms.conf
 *.vscode
 output
 http_client
+.DS_Store
