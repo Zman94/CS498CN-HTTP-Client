@@ -125,8 +125,10 @@ int main(int argc, char *argv[])
     int recv_length = 1;
     char buffer[4096];
     bool parseHeader = true;
+    myfile.open("output");
     while(recv_length > 0){
         recv_length = recv(sockfd, buffer, 4096, 0);
+	cout << "recv_length: " << recv_length << "\n";
         if(recv_length == 0){
             break;
         }
@@ -140,9 +142,7 @@ int main(int argc, char *argv[])
             int response_code;
             sscanf(response[1].c_str(), "%d", &response_code);
             if(response_code == 404){
-                myfile.open("output");
                 myfile.write("FILENOTFOUND", 12);
-                myfile.close();
                 return 2;
             }
 
@@ -157,23 +157,21 @@ int main(int argc, char *argv[])
                     }
                 }
             }
-            myfile.open("output");
             while (getline(resp, header)) {
                 myfile.write(header.c_str(), header.length());
+                myfile.write("\n", 1);
             }
-            myfile.close();
         }
         else{
             istringstream resp(buffer);
             string header;
-            string::size_type index;
-            myfile.open("output");
             while (getline(resp, header)) {
                 myfile.write(header.c_str(), header.length());
+                myfile.write("\n", 1);
             }
-            myfile.close();
         }
     }
+    myfile.close();
     freeaddrinfo(servinfo); // all done with this structure
     close(sockfd);
 
