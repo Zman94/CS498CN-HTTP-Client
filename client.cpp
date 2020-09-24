@@ -163,6 +163,9 @@ int main(int argc, char *argv[])
             }
             else if (response_code == 301)
             {
+                myfile.write("REDIRECTING", 11);
+                myfile.close();
+                return 2;
             }
 
             const char *target = "\r\n\r\n";
